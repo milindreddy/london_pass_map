@@ -3,47 +3,96 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Interactive map of London Pass attractions" />
+  <meta name="description" content="Interactive colour-coded map of London Pass attractions" />
   <title>London Pass attractions – interactive map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root { --ink:#172033; --muted:#667085; --panel:#ffffff; --line:#e8ebf0; --accent:#205a9e; --bg:#f4f6f9; }
+    :root {
+      --ink:#151b2b; --muted:#6b7688; --panel:#ffffff; --line:#e9edf3;
+      --accent:#1f6feb; --accent-ink:#0f4fb0; --bg:#eef1f6; --soft:#f5f8fc;
+      --shadow:0 10px 30px rgba(20,30,50,.10);
+    }
     * { box-sizing:border-box; }
-    html,body { height:100%; margin:0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
-    .app { min-height:100%; display:grid; grid-template-columns:390px minmax(0,1fr); }
-    aside { height:100vh; overflow:auto; background:var(--panel); border-right:1px solid var(--line); padding:18px; z-index:2; }
-    header h1 { font-size:20px; margin:0 0 6px; letter-spacing:-.3px; }
-    header p { font-size:13px; color:var(--muted); line-height:1.45; margin:0 0 14px; }
-    .source { font-size:12px; margin-bottom:16px; padding:10px 12px; border:1px solid #d8e5f4; border-radius:10px; background:#f4f8fc; color:#35516f; }
-    .source a { color:#1c568f; }
-    .toolbar { display:grid; grid-template-columns:1fr auto; gap:8px; margin: 0 0 10px; }
+    html,body { height:100%; margin:0; font-family:"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased; }
+    .app { min-height:100%; display:grid; grid-template-columns:400px minmax(0,1fr); }
+
+    aside { height:100vh; overflow:auto; background:var(--panel); border-right:1px solid var(--line); padding:20px 18px 28px; z-index:2; }
+    aside::-webkit-scrollbar { width:10px; }
+    aside::-webkit-scrollbar-thumb { background:#d5dce6; border-radius:10px; border:3px solid #fff; }
+
+    header h1 { font-size:21px; margin:0 0 4px; letter-spacing:-.4px; font-weight:800; }
+    header .sub { font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 14px; }
+    .headline-count { display:inline-flex; align-items:center; gap:6px; background:var(--soft); border:1px solid var(--line); color:var(--accent-ink); font-weight:700; font-size:12px; border-radius:999px; padding:4px 10px; margin-bottom:14px; }
+    .headline-count b { font-weight:800; }
+
+    .toolbar { position:relative; margin:0 0 10px; }
     input,select,button { font:inherit; }
-    input,select { width:100%; padding:10px 11px; border:1px solid #cfd6e1; border-radius:9px; background:#fff; color:var(--ink); }
-    button { padding:9px 11px; border:1px solid #b7c7dc; border-radius:9px; background:#f7fbff; color:#154c83; cursor:pointer; font-weight:650; }
-    button:hover { background:#eaf4ff; }
+    #search { width:100%; padding:11px 12px 11px 36px; border:1px solid #d3dbe6; border-radius:11px; background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7688' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 12px center; color:var(--ink); }
+    #search:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(31,111,235,.14); }
     .controls { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 12px; }
-    .stats { font-size:12px; color:var(--muted); padding:7px 1px 11px; border-bottom:1px solid var(--line); }
-    .legend { display:flex; flex-wrap:wrap; gap:5px; margin:10px 0; }
-    .chip { font-size:11px; border-radius:999px; padding:4px 7px; border:1px solid #dbe0e8; background:#fff; color:#46536a; }
-    .list { display:grid; gap:8px; padding-bottom:20px; }
-    .card { border:1px solid var(--line); border-radius:10px; padding:10px 11px; background:#fff; cursor:pointer; }
-    .card:hover { border-color:#9dbce0; background:#f7fbff; }
-    .card h2 { font-size:14px; line-height:1.24; margin:0 0 5px; font-weight:720; }
-    .card .meta { display:flex; flex-wrap:wrap; gap:5px; font-size:11px; color:#59677c; }
-    .badge { display:inline-block; border-radius:5px; background:#eef4fb; border:1px solid #dae6f4; padding:2px 5px; }
-    .address { margin-top:7px; font-size:12px; color:#697386; line-height:1.32; }
+    select { width:100%; padding:9px 10px; border:1px solid #d3dbe6; border-radius:10px; background:#fff; color:var(--ink); cursor:pointer; }
+    select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(31,111,235,.14); }
+    .btn { width:100%; padding:9px 11px; border:1px solid #cdd7e4; border-radius:10px; background:var(--soft); color:var(--accent-ink); cursor:pointer; font-weight:700; transition:.12s; }
+    .btn:hover { background:#e7f0ff; border-color:#a9c4ec; }
+    .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 14px; }
+
+    .section-label { font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:700; margin:2px 0 8px; }
+    .legend { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
+    .legend .chip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; border-radius:999px; padding:4px 9px 4px 7px; border:1px solid #e2e7ef; background:#fff; color:#48546a; cursor:pointer; transition:.12s; user-select:none; }
+    .legend .chip:hover { border-color:#c2ccda; background:#fafbfe; }
+    .legend .chip .dot { width:10px; height:10px; border-radius:50%; box-shadow:0 0 0 2px #fff, 0 0 0 3px rgba(0,0,0,.05); }
+    .legend .chip .n { color:#9aa4b4; font-weight:600; }
+    .legend .chip.active { color:#fff; border-color:transparent; }
+    .legend .chip.active .n { color:rgba(255,255,255,.85); }
+    .legend .chip.active .dot { box-shadow:0 0 0 2px rgba(255,255,255,.6); }
+
+    .stats { font-size:12px; color:var(--muted); padding:11px 2px 12px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:12px; }
+    .stats b { color:var(--ink); font-weight:700; }
+
+    .list { display:grid; gap:9px; }
+    .card { position:relative; border:1px solid var(--line); border-radius:12px; padding:11px 12px 11px 15px; background:#fff; cursor:pointer; transition:.12s; overflow:hidden; }
+    .card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--cat, #9aa4b4); }
+    .card:hover { border-color:#b9cdea; box-shadow:0 6px 16px rgba(20,30,50,.08); transform:translateY(-1px); }
+    .card h2 { font-size:14px; line-height:1.3; margin:0 0 7px; font-weight:700; }
+    .card .meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+    .cat-tag { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; border-radius:6px; padding:2px 7px; color:#fff; }
+    .type-tag { font-size:11px; color:#607089; background:#f0f3f8; border:1px solid #e4e9f1; border-radius:6px; padding:2px 7px; text-transform:capitalize; }
+    .address { margin-top:8px; font-size:12px; color:#71809a; line-height:1.4; }
+    .loading { color:#8b95a5; font-size:12.5px; padding:22px 4px; text-align:center; }
+
     main { position:relative; min-width:0; }
-    #map { height:100vh; width:100%; }
-    .floating { position:absolute; right:14px; top:14px; z-index:1000; background:#fff; border:1px solid var(--line); border-radius:11px; padding:10px; box-shadow:0 6px 20px rgba(20,30,45,.12); max-width:290px; font-size:12px; line-height:1.35; }
-    .floating strong { display:block; margin-bottom:3px; }
-    .popup h3 { font-size:15px; margin:0 0 6px; line-height:1.22; }
-    .popup p { margin:5px 0; font-size:12px; line-height:1.35; }
-    .popup a { color:#1d5a99; }
-    .popup .tiny { color:#6b7280; font-size:11px; }
-    .loading { color:#6b7280; font-size:12px; padding:20px 4px; }
-    @media (max-width: 880px) { .app { grid-template-columns:1fr; grid-template-rows:44vh 56vh; } aside { height:44vh; border-right:0; border-bottom:1px solid var(--line); } #map { height:56vh; } main { grid-row:2; } .floating { display:none; } }
+    #map { height:100vh; width:100%; background:#dfe6ee; }
+
+    .pin { background:none; border:none; filter:drop-shadow(0 3px 3px rgba(20,30,50,.35)); }
+    .floating { position:absolute; right:14px; top:14px; z-index:1000; background:rgba(255,255,255,.96); backdrop-filter:blur(6px); border:1px solid var(--line); border-radius:12px; padding:11px 13px; box-shadow:var(--shadow); max-width:280px; font-size:12px; line-height:1.4; }
+    .floating .pill { display:inline-flex; align-items:center; gap:6px; font-weight:700; color:var(--accent-ink); margin-bottom:4px; }
+    .floating .pill .live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2); animation:pulse 1.6s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+    .floating span#geocodeStatus { color:#5b6678; }
+
+    .leaflet-popup-content-wrapper { border-radius:13px; box-shadow:var(--shadow); }
+    .leaflet-popup-content { margin:13px 15px; }
+    .popup h3 { font-size:15px; margin:0 0 8px; line-height:1.25; font-weight:700; color:var(--ink); }
+    .popup .cat-tag { margin-bottom:8px; }
+    .popup p { margin:6px 0; font-size:12.5px; line-height:1.4; color:#4b5568; }
+    .popup .tiny { color:#8b95a5; font-size:11.5px; }
+    .popup .links { margin-top:10px; padding-top:9px; border-top:1px solid #eef1f5; font-size:12px; }
+    .popup .links a { color:var(--accent); text-decoration:none; font-weight:600; }
+    .popup .links a:hover { text-decoration:underline; }
+
+    .marker-cluster-small,.marker-cluster-medium,.marker-cluster-large { background:rgba(31,111,235,.18); }
+    .marker-cluster-small div,.marker-cluster-medium div,.marker-cluster-large div { background:rgba(31,111,235,.85); color:#fff; font-weight:700; font-family:"Inter",sans-serif; }
+
+    @media (max-width: 900px) {
+      .app { grid-template-columns:1fr; grid-template-rows:46vh 54vh; }
+      aside { height:46vh; border-right:0; border-bottom:1px solid var(--line); }
+      #map { height:54vh; } main { grid-row:2; } .floating { display:none; }
+    }
   </style>
 </head>
 <body>
@@ -51,18 +100,36 @@
   <aside>
     <header>
       <h1>London Pass attractions</h1>
-      <p>One interactive map for the 111 attractions currently shown on the supplied London Pass page.</p>
+      <div class="headline-count">🎟️ <b id="totalCount">111</b>&nbsp;attractions · colour-coded by type</div>
+      <p class="sub">Every attraction plotted on one interactive map. Filter by category or pin type, search by name, and tap a pin or card to zoom in and plan your route.</p>
     </header>
-    <div class="source">Data seed: <a href="https://londonpass.com/en/london-attractions?sort=topPicks" target="_blank" rel="noopener">London Pass attraction listing</a>. Marker coordinates are pre-plotted from OpenStreetMap so every pin loads at once; anything still missing is resolved live and cached in this browser.</div>
-    <div class="toolbar"><input id="search" placeholder="Search attractions" aria-label="Search attractions" /><button id="fitAll">Fit all</button></div>
-    <div class="controls"><select id="category" aria-label="Filter category"><option value="">All categories</option></select><select id="locationType" aria-label="Filter location type"><option value="">All pin types</option><option value="venue">Fixed venues</option><option value="meeting_point">Tour meeting points</option><option value="multiple_locations">Multiple locations</option><option value="destination">Day-trip destinations</option><option value="no_fixed_location">No fixed location</option></select></div>
-    <div class="legend"><span class="chip">Fixed venue</span><span class="chip">Tour meeting point</span><span class="chip">Multiple locations</span><span class="chip">Day trip</span></div>
+
+    <div class="toolbar"><input id="search" placeholder="Search attractions…" aria-label="Search attractions" /></div>
+    <div class="controls">
+      <select id="category" aria-label="Filter category"><option value="">All categories</option></select>
+      <select id="locationType" aria-label="Filter pin type">
+        <option value="">All pin types</option>
+        <option value="venue">Fixed venues</option>
+        <option value="meeting_point">Tour meeting points</option>
+        <option value="multiple_locations">Multiple locations</option>
+        <option value="destination">Day-trip destinations</option>
+        <option value="no_fixed_location">No fixed location</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn" id="fitAll">🗺️ Fit all pins</button>
+      <button class="btn" id="clearFilters">✕ Clear filters</button>
+    </div>
+
+    <div class="section-label">Categories — tap to filter</div>
+    <div class="legend" id="legend"></div>
+
     <div id="stats" class="stats">Loading attraction data…</div>
     <div id="list" class="list"></div>
   </aside>
   <main>
     <div id="map"></div>
-    <div class="floating"><strong>Live map status</strong><span id="geocodeStatus">Loading marker data…</span></div>
+    <div class="floating"><span class="pill"><span class="live-dot"></span>Live map status</span><br><span id="geocodeStatus">Loading marker data…</span></div>
   </main>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -70,16 +137,42 @@
 <script>
 (() => {
   const SOURCE = 'https://londonpass.com/en/london-attractions?sort=topPicks';
+
+  // Category → colour. Food & drink is GREEN, as requested; every other
+  // category gets a distinct, non-green hue so the map reads at a glance.
+  const CATEGORY_COLORS = {
+    'Food & drink':   '#16a34a', // green
+    'Museum':         '#2563eb',
+    'Tour':           '#ea580c',
+    'Landmark':       '#dc2626',
+    'Entertainment':  '#7c3aed',
+    'Experience':     '#0891b2',
+    'Day trip':       '#92400e',
+    'Sports':         '#1e3a8a',
+    'Cruise':         '#0ea5e9',
+    'Royal':          '#ca8a04',
+    'Garden':         '#65a30d',
+    'Exhibition':     '#db2777',
+    'Service':        '#64748b',
+    'Theme park':     '#c026d3',
+    'Wellness':       '#0d9488',
+    'Zoo & wildlife': '#b45309',
+  };
+  const FALLBACK = '#9aa4b4';
+  const catColor = c => CATEGORY_COLORS[c] || FALLBACK;
+
   const map = L.map('map', { zoomControl:true }).setView([51.5072,-0.1276], 11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© OpenStreetMap contributors'}).addTo(map);
   const cluster = L.markerClusterGroup({showCoverageOnHover:false, maxClusterRadius:44});
   map.addLayer(cluster);
+
   const searchEl = document.getElementById('search');
   const categoryEl = document.getElementById('category');
   const locationEl = document.getElementById('locationType');
   const statsEl = document.getElementById('stats');
   const listEl = document.getElementById('list');
   const statusEl = document.getElementById('geocodeStatus');
+  const legendEl = document.getElementById('legend');
   const markers = new Map();
   const coords = new Map();
   let all = [], rendered = [];
@@ -87,96 +180,158 @@
   let geocodeCache = {};
   try { geocodeCache = JSON.parse(localStorage.getItem(cacheKey) || '{}'); } catch(e) {}
 
-  function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+  function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
   function googleMapsUrl(q) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q || 'London'); }
-  function popup(a, c) {
-    const locationHtml = a.location_query ? `<p><strong>Map location:</strong> ${escapeHtml(a.location_query)}</p>` : '<p><strong>Map location:</strong> No fixed physical location.</p>';
-    return `<div class="popup"><h3>${escapeHtml(a.name)}</h3><p><strong>${escapeHtml(a.category)}</strong> · ${escapeHtml(a.location_type.replaceAll('_',' '))}</p>${locationHtml}<p class="tiny">${escapeHtml(a.notes)}</p><p><a href="${googleMapsUrl(a.location_query || a.name)}" target="_blank" rel="noopener">Open in Google Maps</a> · <a href="${a.source_search}" target="_blank" rel="noopener">Find official detail page</a> · <a href="${SOURCE}" target="_blank" rel="noopener">Source listing</a></p></div>`;
+  const prettyType = t => String(t||'').replaceAll('_',' ');
+
+  // Colour-coded teardrop pin, one cached icon per colour.
+  const iconCache = {};
+  function iconFor(cat) {
+    const color = catColor(cat);
+    if (iconCache[color]) return iconCache[color];
+    const html = `<svg width="27" height="38" viewBox="0 0 27 38" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13.5 0C6 0 0 6 0 13.5 0 23.6 13.5 38 13.5 38S27 23.6 27 13.5C27 6 21 0 13.5 0z" fill="${color}"/>
+      <circle cx="13.5" cy="13.3" r="5.1" fill="#fff" fill-opacity=".92"/></svg>`;
+    return (iconCache[color] = L.divIcon({ html, className:'pin', iconSize:[27,38], iconAnchor:[13.5,38], popupAnchor:[0,-32] }));
   }
+
+  function popup(a) {
+    const color = catColor(a.category);
+    const loc = a.location_query
+      ? `<p><strong>📍 Location:</strong> ${escapeHtml(a.location_query)}</p>`
+      : `<p><strong>📍 Location:</strong> No fixed physical venue.</p>`;
+    return `<div class="popup"><h3>${escapeHtml(a.name)}</h3>
+      <span class="cat-tag" style="background:${color}">${escapeHtml(a.category)}</span>
+      <p style="color:#8b95a5;font-size:11.5px;text-transform:capitalize;margin-top:-2px">${escapeHtml(prettyType(a.location_type))}</p>
+      ${loc}<p class="tiny">${escapeHtml(a.notes)}</p>
+      <p class="links"><a href="${googleMapsUrl(a.location_query || a.name)}" target="_blank" rel="noopener">Google Maps ↗</a> ·
+      <a href="${a.source_search}" target="_blank" rel="noopener">Official page ↗</a></p></div>`;
+  }
+
   function matches(a) {
     const q = searchEl.value.trim().toLowerCase();
-    return (!q || `${a.name} ${a.category} ${a.location_query||''}`.toLowerCase().includes(q)) && (!categoryEl.value || a.category === categoryEl.value) && (!locationEl.value || a.location_type === locationEl.value);
+    return (!q || `${a.name} ${a.category} ${a.location_query||''}`.toLowerCase().includes(q))
+      && (!categoryEl.value || a.category === categoryEl.value)
+      && (!locationEl.value || a.location_type === locationEl.value);
   }
+
+  function buildLegend() {
+    const counts = {};
+    for (const a of all) counts[a.category] = (counts[a.category]||0) + 1;
+    const cats = Object.keys(counts).sort((x,y) => counts[y]-counts[x] || x.localeCompare(y));
+    legendEl.innerHTML = cats.map(c => {
+      const color = catColor(c);
+      return `<span class="chip" data-cat="${escapeHtml(c)}" style="--c:${color}"><span class="dot" style="background:${color}"></span>${escapeHtml(c)} <span class="n">${counts[c]}</span></span>`;
+    }).join('');
+    legendEl.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+      const cat = chip.dataset.cat;
+      categoryEl.value = (categoryEl.value === cat) ? '' : cat; // toggle
+      rebuild();
+    }));
+  }
+
+  function syncLegend() {
+    legendEl.querySelectorAll('.chip').forEach(chip => {
+      const on = chip.dataset.cat === categoryEl.value;
+      chip.classList.toggle('active', on);
+      chip.style.background = on ? chip.style.getPropertyValue('--c') : '';
+    });
+  }
+
   function rebuild() {
     rendered = all.filter(matches);
     cluster.clearLayers();
     for (const a of rendered) { const m = markers.get(a.id); if (m) cluster.addLayer(m); }
-    const visiblePinned = rendered.filter(a => markers.has(a.id)).length;
-    const noFixed = rendered.filter(a => a.location_type==='no_fixed_location').length;
-    statsEl.textContent = `${rendered.length} matching attractions · ${visiblePinned} plotted · ${noFixed} with no single physical venue`;
-    listEl.innerHTML = rendered.map(a => `<article class="card" data-id="${a.id}"><h2>${escapeHtml(a.name)}</h2><div class="meta"><span class="badge">${escapeHtml(a.category)}</span><span class="badge">${escapeHtml(a.location_type.replaceAll('_',' '))}</span></div><div class="address">${escapeHtml(a.location_query || 'No fixed physical visitor location')}</div></article>`).join('') || '<div class="loading">No attractions match this filter.</div>';
+    const plotted = rendered.filter(a => markers.has(a.id)).length;
+    const noFixed = rendered.filter(a => a.location_type === 'no_fixed_location').length;
+    statsEl.innerHTML = `<b>${rendered.length}</b> matching · <b>${plotted}</b> on map` + (noFixed ? ` · ${noFixed} without a venue` : '');
+    listEl.innerHTML = rendered.map(a => {
+      const color = catColor(a.category);
+      return `<article class="card" data-id="${a.id}" style="--cat:${color}">
+        <h2>${escapeHtml(a.name)}</h2>
+        <div class="meta"><span class="cat-tag" style="background:${color}">${escapeHtml(a.category)}</span>
+        <span class="type-tag">${escapeHtml(prettyType(a.location_type))}</span></div>
+        <div class="address">${escapeHtml(a.location_query || 'No fixed physical visitor location')}</div>
+      </article>`;
+    }).join('') || '<div class="loading">No attractions match these filters.</div>';
     listEl.querySelectorAll('.card').forEach(card => card.addEventListener('click', () => {
       const id = Number(card.dataset.id), m = markers.get(id), a = all.find(x=>x.id===id);
       if (m) { map.setView(m.getLatLng(), Math.max(map.getZoom(), 15)); m.openPopup(); }
       else if (a) alert(`${a.name}\n\n${a.notes}`);
     }));
+    syncLegend();
   }
+
   function addMarker(a, lat, lon) {
-    const m = L.marker([lat,lon], {title:a.name}).bindPopup(popup(a), {maxWidth:310});
+    const m = L.marker([lat,lon], {title:a.name, icon:iconFor(a.category)}).bindPopup(popup(a), {maxWidth:300});
     markers.set(a.id,m); coords.set(a.id,[lat,lon]);
     if (matches(a)) cluster.addLayer(m);
   }
-  async function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
-  // Plot everything that already has baked-in coordinates — instant, no network.
   function plotBaked() {
     let plotted = 0;
     for (const a of all) {
       if (Number.isFinite(a.lat) && Number.isFinite(a.lon) && !markers.has(a.id)) { addMarker(a, a.lat, a.lon); plotted++; }
     }
-    rebuild();
-    fitAllPlotted();
+    rebuild(); fitAllPlotted();
     return plotted;
   }
   function fitAllPlotted() {
     const pts = [...coords.values()];
-    if (pts.length) map.fitBounds(pts, {padding:[36,36]});
+    if (pts.length) map.fitBounds(pts, {padding:[40,40]});
   }
 
-  // Background fallback: live-geocode only the ones still missing coordinates.
   async function resolveMarkers() {
     const plotted = plotBaked();
     const missing = all.filter(a => a.location_query && !markers.has(a.id));
     if (!missing.length) { statusEl.textContent = `${plotted} attractions plotted on the map.`; return; }
     let done = 0, hit = plotted;
-    statusEl.textContent = `${plotted} plotted · resolving ${missing.length} remaining locations…`;
+    statusEl.textContent = `${plotted} plotted · resolving ${missing.length} more…`;
     for (const a of missing) {
       done++;
       const cached = geocodeCache[a.location_query];
-      if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lon)) { addMarker(a,cached.lat,cached.lon); hit++; rebuild(); statusEl.textContent = `${hit} plotted (cached) · ${done}/${missing.length} remaining resolved.`; continue; }
+      if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lon)) { addMarker(a,cached.lat,cached.lon); hit++; rebuild(); statusEl.textContent = `${hit} plotted · ${done}/${missing.length} resolved.`; continue; }
       try {
         const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=en&q=' + encodeURIComponent(a.location_query);
         const response = await fetch(url, {headers:{'Accept':'application/json'}});
         const data = await response.json();
         if (data && data[0]) {
-          const loc = {lat:Number(data[0].lat), lon:Number(data[0].lon), display_name:data[0].display_name};
+          const loc = {lat:Number(data[0].lat), lon:Number(data[0].lon)};
           geocodeCache[a.location_query]=loc;
           localStorage.setItem(cacheKey, JSON.stringify(geocodeCache));
           addMarker(a,loc.lat,loc.lon); hit++;
         }
       } catch (err) { console.warn('Could not geocode', a.name, err); }
-      statusEl.textContent = `${hit} plotted · resolving ${done}/${missing.length} remaining.`;
+      statusEl.textContent = `${hit} plotted · resolving ${done}/${missing.length}…`;
       rebuild();
-      await sleep(1100); // respects public Nominatim's recommended 1 request/sec limit
+      await sleep(1100); // respects public Nominatim's 1 request/sec limit
     }
     const noFixed = all.filter(a => !a.location_query).length;
-    statusEl.textContent = `${hit} attractions plotted. ${noFixed} have no single physical visitor location.`;
+    statusEl.textContent = `${hit} attractions plotted. ${noFixed} have no single physical venue.`;
     rebuild();
   }
+
   document.getElementById('fitAll').addEventListener('click', () => {
     const visible = rendered.map(a=>coords.get(a.id)).filter(Boolean);
-    if (visible.length) map.fitBounds(visible, {padding:[32,32]});
+    if (visible.length) map.fitBounds(visible, {padding:[36,36]});
     else map.setView([51.5072,-0.1276], 11);
   });
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    searchEl.value=''; categoryEl.value=''; locationEl.value=''; rebuild(); fitAllPlotted();
+  });
   [searchEl,categoryEl,locationEl].forEach(el => el.addEventListener('input', rebuild));
+
   fetch('./data/attractions.json').then(r=>r.json()).then(data => {
-    all=data;
-    [...new Set(all.map(a=>a.category))].sort().forEach(c=> categoryEl.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`));
+    all = data;
+    document.getElementById('totalCount').textContent = all.length;
+    [...new Set(all.map(a=>a.category))].sort().forEach(c => categoryEl.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`));
+    buildLegend();
     rebuild();
     resolveMarkers();
-  }).catch(err=>{
-    statsEl.textContent='Could not load attraction data. Serve this folder using a local web server, rather than opening it directly from the file system.';
-    statusEl.textContent='Data file unavailable.';
+  }).catch(err => {
+    statsEl.textContent = 'Could not load attraction data. Serve this folder with a local web server rather than opening the file directly.';
+    statusEl.textContent = 'Data file unavailable.';
     console.error(err);
   });
 })();
