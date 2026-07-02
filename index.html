@@ -206,10 +206,10 @@
 
   function escapeHtml(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
   function googleMapsUrl(q) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q || 'London'); }
-  // Reliable link to the official London Pass page — a plain web search for the
-  // attraction lands on its londonpass.com page (the old site: query returned
-  // no results, so the link looked broken).
-  function officialUrl(a) { return 'https://www.google.com/search?q=' + encodeURIComponent(a.name + ' London Pass'); }
+  // Direct deep-link to the attraction's official London Pass page
+  // (https://londonpass.com/en/london-attractions/<slug>). Falls back to a web
+  // search if an attraction has no baked slug.
+  function officialUrl(a) { return a.official_url || ('https://www.google.com/search?q=' + encodeURIComponent(a.name + ' London Pass')); }
   const prettyType = t => String(t||'').replaceAll('_',' ');
 
   const iconCache = {};
