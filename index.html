@@ -232,7 +232,7 @@
       <p style="color:#7b8598;font-size:11.5px;text-transform:capitalize;margin-top:-2px">${escapeHtml(prettyType(a.location_type))}</p>
       ${loc}<p class="tiny">${escapeHtml(a.notes)}</p>
       <p class="links"><a href="${googleMapsUrl(a.location_query || a.name)}" target="_blank" rel="noopener">Google Maps ↗</a> ·
-      <a href="${officialUrl(a)}" target="_blank" rel="noopener">Official page ↗</a></p></div>`;
+      <a href="${officialUrl(a)}" target="_blank" rel="noopener">${a.official_slug ? 'Official page ↗' : 'Find on London Pass ↗'}</a></p></div>`;
   }
 
   function matches(a) {
