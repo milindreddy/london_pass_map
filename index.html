@@ -90,7 +90,6 @@
 <div class="app view-map" id="app">
   <header class="bar">
     <h1>London Pass map <span class="n" id="count"></span></h1>
-    <input id="search" placeholder="Search…" aria-label="Search attractions" />
     <div class="chips" id="legend"></div>
   </header>
   <aside><div id="list" class="list"></div></aside>
@@ -126,7 +125,6 @@
   const cluster = L.markerClusterGroup({ showCoverageOnHover:false, maxClusterRadius:44 });
   map.addLayer(cluster);
 
-  const searchEl = document.getElementById('search');
   const listEl = document.getElementById('list');
   const legendEl = document.getElementById('legend');
   const countEl = document.getElementById('count');
@@ -159,7 +157,7 @@
       <a href="${officialUrl(a)}" target="_blank" rel="noopener">${a.official_slug ? 'Official page ↗' : 'London Pass ↗'}</a></p></div>`;
   }
 
-  const matches = a => (!searchEl.value.trim() || `${a.name} ${a.category} ${a.location_query||''}`.toLowerCase().includes(searchEl.value.trim().toLowerCase())) && (!activeCat || a.category === activeCat);
+  const matches = a => (!activeCat || a.category === activeCat);
 
   function addHome() {
     const icon = L.divIcon({ className:'pin', html:`<div class="home-badge">🏠</div>`, iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-14] });
@@ -171,10 +169,13 @@
     const counts = {};
     for (const a of all) counts[a.category] = (counts[a.category]||0) + 1;
     const cats = Object.keys(counts).sort((x,y) => counts[y]-counts[x] || x.localeCompare(y));
-    legendEl.innerHTML = cats.map(c => `<span class="chip" data-cat="${escapeHtml(c)}" style="--c:${catColor(c)}"><span class="dot" style="background:${catColor(c)}"></span>${escapeHtml(c)} <span class="n">${counts[c]}</span></span>`).join('');
+    const allChip = `<span class="chip" data-cat="" style="--c:#5b9dff"><span class="dot" style="background:#5b9dff"></span>All <span class="n">${all.length}</span></span>`;
+    legendEl.innerHTML = allChip + cats.map(c => `<span class="chip" data-cat="${escapeHtml(c)}" style="--c:${catColor(c)}"><span class="dot" style="background:${catColor(c)}"></span>${escapeHtml(c)} <span class="n">${counts[c]}</span></span>`).join('');
     legendEl.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
-      activeCat = (activeCat === chip.dataset.cat) ? '' : chip.dataset.cat; // toggle: click a category to show only those
+      activeCat = chip.dataset.cat;   // click a category to show only those; All resets
+      if (isMobile()) setView('list'); // on phones, jump to the list of that category
       rebuild();
+      fitAll();
     }));
   }
   function syncChips() {
@@ -207,7 +208,9 @@
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
   function fitAll() {
-    const pts = [...coords.values(), [HOME.lat, HOME.lon]];
+    // Fit to whatever is currently shown; include home only when showing everything.
+    const pts = rendered.map(a => coords.get(a.id)).filter(Boolean);
+    if (!activeCat) pts.push([HOME.lat, HOME.lon]);
     if (pts.length) map.fitBounds(pts, { padding:[36,36] });
   }
   function plotBaked() {
@@ -241,7 +244,6 @@
   document.querySelectorAll('.viewtoggle button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
   document.getElementById('fitAll').addEventListener('click', fitAll);
   document.getElementById('goHome').addEventListener('click', () => { if (isMobile()) setView('map'); map.setView([HOME.lat, HOME.lon], 15); });
-  searchEl.addEventListener('input', rebuild);
 
   addHome();
   fetch('./data/attractions.json').then(r=>r.json()).then(data => {
