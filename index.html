@@ -16,42 +16,47 @@
     * { box-sizing:border-box; }
     html,body { height:100%; margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased; overflow:hidden; overscroll-behavior:none; }
 
-    /* --app-h is set from window.innerHeight in JS (reliable mobile viewport height); 100dvh/100vh are fallbacks. */
-    .app { height:100vh; height:100dvh; height:var(--app-h,100vh); display:grid; grid-template-columns:320px 1fr; grid-template-rows:auto 1fr; grid-template-areas:"bar map" "list map"; overflow:hidden; }
+    /* --app-h is set from window.innerHeight in JS (reliable mobile viewport height). */
+    .app { position:relative; height:100vh; height:100dvh; height:var(--app-h,100vh); display:grid; grid-template-columns:340px 1fr; overflow:hidden; }
 
-    .bar { grid-area:bar; padding:14px 14px 10px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
-    .bar h1 { font-size:15px; font-weight:600; margin:0 0 10px; letter-spacing:-.2px; display:flex; align-items:baseline; gap:7px; }
-    .bar h1 .n { font-size:11px; color:var(--muted); font-weight:400; }
-    #search { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:#0f141b; color:var(--ink); font:inherit; font-size:13px; }
-    #search::placeholder { color:#5f6773; }
-    #search:focus { outline:none; border-color:var(--accent); }
-    .chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
-    .chip { display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:3px 8px 3px 6px; border:1px solid var(--line); border-radius:999px; background:transparent; color:#c2c8d2; cursor:pointer; user-select:none; }
-    .chip .dot { width:8px; height:8px; border-radius:50%; }
+    /* Left panel = title + categories + list. Desktop: fixed column. Mobile: slide-in drawer. */
+    .panel { display:flex; flex-direction:column; min-height:0; border-right:1px solid var(--line); background:var(--panel); }
+    .bar { flex:0 0 auto; padding:14px 14px 10px; border-bottom:1px solid var(--line); }
+    .bar-top { display:flex; align-items:center; gap:8px; margin-bottom:11px; }
+    .bar h1 { font-size:15px; font-weight:600; margin:0; letter-spacing:-.2px; flex:1; }
+    .bar h1 .n { font-size:11px; color:var(--muted); font-weight:400; margin-left:5px; }
+    .closeDrawer { display:none; background:none; border:0; color:var(--muted); font-size:22px; line-height:1; padding:2px 6px; cursor:pointer; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .chip { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; padding:6px 11px 6px 9px; border:1px solid var(--line); border-radius:999px; background:transparent; color:#c2c8d2; cursor:pointer; user-select:none; }
+    .chip .dot { width:9px; height:9px; border-radius:50%; }
     .chip .n { color:#5f6773; }
-    .chip:hover { border-color:#3a4454; }
+    .chip:active { transform:scale(.96); }
     .chip.active { color:#0e1116; font-weight:600; border-color:transparent; }
     .chip.active .n { color:rgba(0,0,0,.5); }
 
-    aside { grid-area:list; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; border-right:1px solid var(--line); min-height:0; }
+    aside { flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; min-height:0; }
     aside::-webkit-scrollbar { width:8px; }
     aside::-webkit-scrollbar-thumb { background:#2a323e; border-radius:8px; }
     .list { display:flex; flex-direction:column; }
-    .card { display:flex; align-items:flex-start; gap:9px; padding:10px 14px; border-bottom:1px solid var(--line); cursor:pointer; }
-    .card:hover { background:#191f27; }
-    .card .cdot { width:9px; height:9px; border-radius:50%; margin-top:4px; flex:0 0 auto; }
+    .card { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-bottom:1px solid var(--line); cursor:pointer; }
+    .card:active { background:#191f27; }
+    .card .cdot { width:10px; height:10px; border-radius:50%; margin-top:4px; flex:0 0 auto; }
     .card .body { min-width:0; }
-    .card h2 { font-size:13px; font-weight:500; margin:0 0 2px; line-height:1.3; }
-    .card .sub { font-size:11px; color:var(--muted); line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .card h2 { font-size:13.5px; font-weight:500; margin:0 0 2px; line-height:1.3; }
+    .card .sub { font-size:11.5px; color:var(--muted); line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .empty { padding:24px 14px; color:var(--muted); font-size:12px; text-align:center; }
 
-    main { grid-area:map; position:relative; min-width:0; }
+    main { position:relative; min-width:0; }
     #map { position:absolute; inset:0; background:#0e1116; }
-    .mapbtns { position:absolute; right:10px; top:10px; z-index:1000; display:flex; gap:6px; }
-    .mapbtns button { font:inherit; font-size:12px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:rgba(21,26,33,.92); color:var(--ink); cursor:pointer; backdrop-filter:blur(4px); }
-    .mapbtns button:hover { background:#20272f; }
+    .mapbtns { position:absolute; right:10px; top:10px; z-index:800; display:flex; gap:6px; }
+    .mapbtns button { font:inherit; font-size:12.5px; padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:rgba(21,26,33,.94); color:var(--ink); cursor:pointer; backdrop-filter:blur(4px); }
     .mapbtns .home { background:var(--home); color:#1a1400; border-color:#caa000; font-weight:600; }
 
+    /* Burger + backdrop: mobile only */
+    #burger { display:none; position:absolute; top:10px; left:10px; z-index:900; width:44px; height:44px; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:11px; background:rgba(21,26,33,.94); color:var(--ink); cursor:pointer; backdrop-filter:blur(4px); }
+    #backdrop { display:none; position:absolute; inset:0; background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .25s; z-index:1450; }
+
+    .leaflet-control-zoom { margin-top:60px !important; }   /* clear the burger */
     .leaflet-control-zoom a { background:#151a21 !important; color:#c2c8d2 !important; border-color:var(--line) !important; }
     .leaflet-control-zoom a:hover { background:#20272f !important; }
     .leaflet-control-attribution { background:rgba(14,17,22,.7) !important; color:#5f6773 !important; }
@@ -67,47 +72,46 @@
     .popup .tag { display:inline-block; font-size:10px; padding:2px 7px; border-radius:5px; color:#0e1116; font-weight:600; margin-bottom:6px; }
     .popup p { margin:5px 0; font-size:12px; color:#aab2be; line-height:1.4; }
     .popup a { color:var(--accent); text-decoration:none; }
-    .popup a:hover { text-decoration:underline; }
-
-    .viewtoggle { display:none; }
 
     @media (max-width: 760px) {
-      .app { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr) auto; grid-template-areas:"bar" "content" "toggle"; }
-      .bar { border-right:0; padding:10px 12px; }
-      .bar h1 { margin:0 0 8px; }
-      .chips { flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; margin-top:0; padding:2px 0 4px; scrollbar-width:none; }
-      .chips::-webkit-scrollbar { display:none; }
-      .chip { flex:0 0 auto; padding:6px 11px 6px 9px; font-size:12px; }   /* bigger tap target */
-      /* Map and list share the same cell; only one is shown at a time. */
-      aside, main { grid-area:content; min-height:0; min-width:0; }
-      aside { border-right:0; }
-      .app.view-map aside { display:none; }
-      .app.view-list main { display:none; }
-      .mapbtns button { padding:9px 12px; }   /* bigger tap target */
-      .viewtoggle { grid-area:toggle; display:flex; border-top:1px solid var(--line); background:var(--panel); }
-      .viewtoggle button { flex:1; font:inherit; font-size:14px; font-weight:600; padding:13px; background:none; border:0; color:var(--muted); cursor:pointer; }
-      .viewtoggle button.on { color:var(--ink); box-shadow:inset 0 -2px 0 var(--accent); }
+      .app { grid-template-columns:1fr; }        /* map fills everything */
+      #burger { display:flex; }
+      #backdrop { display:block; }
+      .closeDrawer { display:block; }
+      .panel {
+        position:absolute; top:0; left:0; bottom:0; width:min(86vw,340px); z-index:1500;
+        transform:translateX(-100%); transition:transform .26s ease; box-shadow:2px 0 24px rgba(0,0,0,.5);
+      }
+      .app.drawer-open .panel { transform:translateX(0); }
+      .app.drawer-open #backdrop { opacity:1; pointer-events:auto; }
+      .bar h1 { font-size:16px; }
+      .leaflet-control-zoom { margin-top:64px !important; margin-left:8px !important; }
     }
   </style>
 </head>
 <body>
-<div class="app view-map" id="app">
-  <header class="bar">
-    <h1>London Pass map <span class="n" id="count"></span></h1>
-    <div class="chips" id="legend"></div>
-  </header>
-  <aside><div id="list" class="list"></div></aside>
+<div class="app" id="app">
+  <div class="panel" id="panel">
+    <header class="bar">
+      <div class="bar-top">
+        <h1>London Pass map <span class="n" id="count"></span></h1>
+        <button class="closeDrawer" id="closeDrawer" aria-label="Close">&times;</button>
+      </div>
+      <div class="chips" id="legend"></div>
+    </header>
+    <aside><div id="list" class="list"></div></aside>
+  </div>
   <main>
     <div id="map"></div>
+    <button id="burger" aria-label="Open list">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
     <div class="mapbtns">
       <button id="fitAll">Fit all</button>
       <button class="home" id="goHome">🏠 Stay</button>
     </div>
   </main>
-  <nav class="viewtoggle">
-    <button data-view="list">List</button>
-    <button data-view="map" class="on">Map</button>
-  </nav>
+  <div id="backdrop"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -178,7 +182,7 @@
     legendEl.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
       activeCat = chip.dataset.cat;   // click a category to show only those; All resets
       rebuild();
-      fitAll();   // frames the selection; on mobile the map is framed for when you switch to it
+      fitAll();
     }));
   }
   function syncChips() {
@@ -197,7 +201,7 @@
     listEl.innerHTML = rendered.map(a => `<article class="card" data-id="${a.id}"><span class="cdot" style="background:${catColor(a.category)}"></span><div class="body"><h2>${escapeHtml(a.name)}</h2><div class="sub">${escapeHtml(a.category)} · ${escapeHtml(a.location_query || 'No fixed venue')}</div></div></article>`).join('') || '<div class="empty">No attractions match.</div>';
     listEl.querySelectorAll('.card').forEach(card => card.addEventListener('click', () => {
       const id = Number(card.dataset.id), m = markers.get(id), a = all.find(x=>x.id===id);
-      if (m) { if (isMobile()) setView('map'); map.setView(m.getLatLng(), Math.max(map.getZoom(), 15)); m.openPopup(); }
+      if (m) { closeDrawer(); map.setView(m.getLatLng(), Math.max(map.getZoom(), 15)); m.openPopup(); }
       else if (a) alert(`${a.name}\n\n${a.notes||''}`);
     }));
     syncChips();
@@ -211,16 +215,13 @@
   const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
   function fitAll() {
-    // Fit to whatever is currently shown; include home only when showing everything.
     const pts = rendered.map(a => coords.get(a.id)).filter(Boolean);
     if (!activeCat) pts.push([HOME.lat, HOME.lon]);
-    if (pts.length) map.fitBounds(pts, { padding:[36,36] });
+    if (pts.length) map.fitBounds(pts, { padding:[40,40], maxZoom:15 });
   }
   function plotBaked() {
-    let n = 0;
-    for (const a of all) if (Number.isFinite(a.lat) && Number.isFinite(a.lon) && !markers.has(a.id)) { addMarker(a, a.lat, a.lon); n++; }
+    for (const a of all) if (Number.isFinite(a.lat) && Number.isFinite(a.lon) && !markers.has(a.id)) addMarker(a, a.lat, a.lon);
     rebuild(); fitAll();
-    return n;
   }
   async function resolveMarkers() {
     plotBaked();
@@ -238,16 +239,17 @@
     }
   }
 
-  function setView(v) {
-    app.classList.toggle('view-map', v==='map');
-    app.classList.toggle('view-list', v==='list');
-    document.querySelectorAll('.viewtoggle button').forEach(b => b.classList.toggle('on', b.dataset.view===v));
-    if (v==='map') setTimeout(() => { map.invalidateSize(); fitAll(); }, 60);
-  }
-  document.querySelectorAll('.viewtoggle button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+  // Drawer (mobile)
+  function openDrawer() { app.classList.add('drawer-open'); }
+  function closeDrawer() { app.classList.remove('drawer-open'); }
+  document.getElementById('burger').addEventListener('click', openDrawer);
+  document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+  document.getElementById('backdrop').addEventListener('click', closeDrawer);
 
-  // Lock the app to the REAL visible viewport height (fixes mobile URL-bar
-  // overflow that let the page scroll behind the map) and keep the map sized.
+  document.getElementById('fitAll').addEventListener('click', fitAll);
+  document.getElementById('goHome').addEventListener('click', () => { closeDrawer(); map.setView([HOME.lat, HOME.lon], 15); });
+
+  // Keep the app locked to the real visible viewport height and the map sized.
   function syncHeight() {
     document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px');
     map.invalidateSize();
@@ -255,13 +257,12 @@
   window.addEventListener('resize', syncHeight);
   window.addEventListener('orientationchange', () => setTimeout(syncHeight, 120));
   syncHeight();
-  document.getElementById('fitAll').addEventListener('click', fitAll);
-  document.getElementById('goHome').addEventListener('click', () => { if (isMobile()) setView('map'); map.setView([HOME.lat, HOME.lon], 15); });
 
   addHome();
   fetch('./data/attractions.json').then(r=>r.json()).then(data => {
     all = data; countEl.textContent = all.length;
     buildLegend(); rebuild(); resolveMarkers();
+    setTimeout(() => { map.invalidateSize(); fitAll(); }, 120);
   }).catch(err => { listEl.innerHTML = '<div class="empty">Could not load data. Serve this folder with a local web server.</div>'; console.error(err); });
 })();
 </script>
